@@ -52,15 +52,27 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Scroll Animations
+            // Improved Scroll Animations with Staggering
     const observerOptions = {
-        threshold: 0.2
+        threshold: 0.15,
+        rootMargin: "0px 0px -50px 0px"
     };
 
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('visible');
+                
+                // Add staggered delays to children if they are grid items
+                if (entry.target.classList.contains('projects-grid') || entry.target.classList.contains('skills-container')) {
+                     const children = entry.target.children;
+                     Array.from(children).forEach((child, index) => {
+                         child.style.transitionDelay = `${index * 0.1}s`;
+                         child.classList.add('visible'); // Assuming children also have fade-in or similar
+                     });
+                }
+                
+                observer.unobserve(entry.target); // Only animate once
             }
         });
     }, observerOptions);
@@ -96,21 +108,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const torusKnot = new THREE.Mesh(geometry, material);
         group.add(torusKnot);
 
-        // 2. Floating Particles around the shape
+        // 2. Floating Particles
         const particlesGeometry = new THREE.BufferGeometry();
-        const particlesCount = 1000;
+        const particlesCount = 1500; // Increased count
         const posArray = new Float32Array(particlesCount * 3);
 
         for (let i = 0; i < particlesCount * 3; i++) {
-            posArray[i] = (Math.random() - 0.5) * 50; // Spread wide
+            posArray[i] = (Math.random() - 0.5) * 60; // Wider spread
         }
 
         particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
         const particlesMaterial = new THREE.PointsMaterial({
             size: 0.05,
-            color: 0x38bdf8,
+            color: 0x818cf8, // Changed to secondary gradient color
             transparent: true,
-            opacity: 0.6
+            opacity: 0.6,
+            blending: THREE.AdditiveBlending
         });
         const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
         group.add(particlesMesh);
@@ -121,9 +134,16 @@ document.addEventListener('DOMContentLoaded', () => {
         let mouseX = 0;
         let mouseY = 0;
 
+        // Smoother mouse tracking
+        let targetX = 0;
+        let targetY = 0;
+
+        const windowHalfX = window.innerWidth / 2;
+        const windowHalfY = window.innerHeight / 2;
+
         document.addEventListener('mousemove', (event) => {
-            mouseX = event.clientX - window.innerWidth / 2;
-            mouseY = event.clientY - window.innerHeight / 2;
+            mouseX = (event.clientX - windowHalfX);
+            mouseY = (event.clientY - windowHalfY);
         });
 
         // Animation Loop
@@ -132,16 +152,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const tick = () => {
             const elapsedTime = clock.getElapsedTime();
 
-            // Self-rotation of the torus knot
-            torusKnot.rotation.y = elapsedTime * 0.2;
-            torusKnot.rotation.z = elapsedTime * 0.1;
+            targetX = mouseX * 0.001;
+            targetY = mouseY * 0.001;
 
-            // Rotate particles slowly in opposite direction
-            particlesMesh.rotation.y = -elapsedTime * 0.05;
+            // Self-rotation
+            torusKnot.rotation.y += 0.005;
+            torusKnot.rotation.z += 0.002;
 
-            // Smooth Mouse Parallax Effect for the whole group
-            group.rotation.y += 0.05 * (mouseX * 0.001 - group.rotation.y);
-            group.rotation.x += 0.05 * (mouseY * 0.001 - group.rotation.x);
+            // Particles wave effect
+            particlesMesh.rotation.y = -elapsedTime * 0.1;
+            particlesMesh.position.y = Math.sin(elapsedTime * 0.5) * 2;
+
+            // Smooth Mouse Parallax
+            group.rotation.y += 0.05 * (targetX - group.rotation.y);
+            group.rotation.x += 0.05 * (targetY - group.rotation.x);
 
             renderer.render(scene, camera);
             window.requestAnimationFrame(tick);
