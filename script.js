@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const fadeElements = document.querySelectorAll('.fade-in');
     fadeElements.forEach(el => observer.observe(el));
 
-    // Three.js Background Animation
+    // Three.js Background Animation (Premium Wireframe Torus Knot)
     const initThreeJS = () => {
         const container = document.getElementById('canvas-container');
         if (!container) return;
@@ -78,59 +78,70 @@ document.addEventListener('DOMContentLoaded', () => {
         const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
 
         renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
         container.appendChild(renderer.domElement);
 
-        // Particles
-        const geometry = new THREE.BufferGeometry();
-        const particlesCount = 700; // Efficient number of particles
+        // Group to hold all 3D objects
+        const group = new THREE.Group();
+        scene.add(group);
+
+        // 1. Torus Knot Wireframe
+        const geometry = new THREE.TorusKnotGeometry(10, 3, 100, 16);
+        const material = new THREE.MeshBasicMaterial({
+            color: 0x38bdf8, // Light Blue
+            wireframe: true,
+            transparent: true,
+            opacity: 0.3
+        });
+        const torusKnot = new THREE.Mesh(geometry, material);
+        group.add(torusKnot);
+
+        // 2. Floating Particles around the shape
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 1000;
         const posArray = new Float32Array(particlesCount * 3);
 
         for (let i = 0; i < particlesCount * 3; i++) {
-            // Spread particles in a wider area
-            posArray[i] = (Math.random() - 0.5) * 15;
+            posArray[i] = (Math.random() - 0.5) * 50; // Spread wide
         }
 
-        geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-
-        // Material
-        const material = new THREE.PointsMaterial({
-            size: 0.05, // Small refined dots
-            color: 0x38bdf8, // Accent color (Light Blue)
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.05,
+            color: 0x38bdf8,
             transparent: true,
-            opacity: 0.8,
+            opacity: 0.6
         });
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        group.add(particlesMesh);
 
-        // Mesh
-        const sphere = new THREE.Points(geometry, material);
-        scene.add(sphere);
-
-        camera.position.z = 3;
+        camera.position.z = 30;
 
         // Interaction
         let mouseX = 0;
         let mouseY = 0;
 
         document.addEventListener('mousemove', (event) => {
-            mouseX = event.clientX;
-            mouseY = event.clientY;
+            mouseX = event.clientX - window.innerWidth / 2;
+            mouseY = event.clientY - window.innerHeight / 2;
         });
 
         // Animation Loop
+        const clock = new THREE.Clock();
+
         const tick = () => {
-            const elapsedTime = Date.now() * 0.0005;
+            const elapsedTime = clock.getElapsedTime();
 
-            // Rotate entire sphere slowly
-            sphere.rotation.y = .2 * elapsedTime;
-            sphere.rotation.x = .1 * elapsedTime;
+            // Self-rotation of the torus knot
+            torusKnot.rotation.y = elapsedTime * 0.2;
+            torusKnot.rotation.z = elapsedTime * 0.1;
 
-            // Mouse Interaction (Parallax)
-            // Determine rotation based on percentage of screen width/height
-            const targetX = (mouseX / window.innerWidth - 0.5) * 2;
-            const targetY = (mouseY / window.innerHeight - 0.5) * 2;
+            // Rotate particles slowly in opposite direction
+            particlesMesh.rotation.y = -elapsedTime * 0.05;
 
-            // Smoothly interpolate
-            sphere.rotation.y += 0.05 * (targetX - sphere.rotation.y);
-            sphere.rotation.x += 0.05 * (targetY - sphere.rotation.x);
+            // Smooth Mouse Parallax Effect for the whole group
+            group.rotation.y += 0.05 * (mouseX * 0.001 - group.rotation.y);
+            group.rotation.x += 0.05 * (mouseY * 0.001 - group.rotation.x);
 
             renderer.render(scene, camera);
             window.requestAnimationFrame(tick);
@@ -143,6 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
             camera.aspect = container.clientWidth / container.clientHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
         });
     };
 
@@ -159,20 +171,30 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Form Submission (Visual Feedback only)
+    // Form Submission (Google Form + Popup)
     const form = document.getElementById('contactForm');
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const btn = form.querySelector('button');
-        const originalText = btn.textContent;
+    const modal = document.getElementById('successModal');
+    const closeModal = document.getElementById('closeModal');
 
-        btn.textContent = 'Message Sent!';
-        btn.style.background = '#10b981'; // Success Green
+    form.addEventListener('submit', () => {
+        // Allow the form to submit to the hidden iframe naturally
 
+        // Show Popup after short delay (to ensure submission starts)
         setTimeout(() => {
+            modal.classList.add('active');
             form.reset();
-            btn.textContent = originalText;
-            btn.style.background = ''; // Revert to gradient
-        }, 3000);
+        }, 500);
+    });
+
+    // Close Modal Logic
+    closeModal.addEventListener('click', () => {
+        modal.classList.remove('active');
+    });
+
+    // Close clicking outside
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.remove('active');
+        }
     });
 });

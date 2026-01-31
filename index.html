@@ -51,7 +51,10 @@
             </p>
             <div class="hero-btns">
                 <a href="#projects" class="btn-primary">View Work</a>
-                <a href="#contact" class="btn-secondary">Let's Talk</a>
+                <a href="resume.pdf" class="btn-secondary" target="_blank">View Resume</a>
+                <a href="https://github.com/adhil-adhi4905/portfolio" class="btn-outline" target="_blank"><i
+                        class="fab fa-github"></i> GitHub Repo</a>
+                <a href="#contact" class="btn-text">Let's Talk</a>
             </div>
             <div class="social-links">
                 <a href="https://www.linkedin.com/in/muhammed-adhil-17ba70213" target="_blank"><i
@@ -162,15 +165,20 @@
     <section id="contact" class="section contact-section">
         <h2 class="section-title">Get In Touch</h2>
         <div class="contact-container fade-in">
-            <form class="contact-form" id="contactForm">
+            <!-- Hidden iframe for form submission without page reload -->
+            <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+
+            <form class="contact-form" id="contactForm"
+                action="https://docs.google.com/forms/u/0/d/e/1FAIpQLSe5ypsQ3s7eHCBe_7oQkgw-o1nUJUkKSj4wLlWt4CsaOlgvQw/formResponse"
+                method="POST" target="hidden_iframe">
                 <div class="form-group">
-                    <input type="text" placeholder="Your Name" required>
+                    <input type="text" name="entry.1017905922" placeholder="Your Name" required>
                 </div>
                 <div class="form-group">
-                    <input type="email" placeholder="Your Email" required>
+                    <input type="email" name="entry.100559431" placeholder="Your Email" required>
                 </div>
                 <div class="form-group">
-                    <textarea placeholder="Your Message" rows="5" required></textarea>
+                    <textarea name="entry.1826956279" placeholder="Your Message" rows="5" required></textarea>
                 </div>
                 <button type="submit" class="btn-primary">Send Message</button>
             </form>
@@ -190,6 +198,16 @@
     <footer>
         <p>&copy; 2026 Muhammed Adhil. Built with <i class="fas fa-heart"></i> & Code.</p>
     </footer>
+
+    <!-- Success Popup Modal -->
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <i class="fas fa-check-circle"></i>
+            <h3>Message Sent!</h3>
+            <p>Thank you for reaching out. I will get back to you soon.</p>
+            <button class="btn-primary" id="closeModal">Close</button>
+        </div>
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="script.js"></script>
